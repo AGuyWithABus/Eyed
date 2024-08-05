@@ -12,6 +12,6 @@ pkg install python
 pkg install openjdk-17
 pkg install git
 
-##Setup
+## Setup
 
 1. Clone the Repository
