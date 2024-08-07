@@ -1,22 +1,25 @@
 import firebase_admin
 from firebase_admin import credentials, messaging
 
-def initialize_firebase():
-    cred = credentials.Certificate("path/to/serviceAccountKey.json")
-    firebase_admin.initialize_app(cred)
+# Path to your service account key file
+cred = credentials.Certificate("serviceAccountKey.json")
+firebase_admin.initialize_app(cred)
 
-def send_command(command):
+def send_message(topic, message_body):
     message = messaging.Message(
         data={
-            "command": command,
+            'message': message_body
         },
-        topic="all",
+        topic=topic,
     )
     response = messaging.send(message)
-    print(f'Successfully sent command: {response}')
+    print('Successfully sent message:', response)
+
+def main():
+    while True:
+        command = input("Enter the command to send to the device: ")
+        send_message('device_topic', command)
 
 if __name__ == "__main__":
-    initialize_firebase()
-    while True:
-        command = input("Enter command: ")
-        send_command(command)
+    main()
+ 
