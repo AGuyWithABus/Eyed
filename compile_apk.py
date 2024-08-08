@@ -37,7 +37,9 @@ def compile_apk():
     try:
         subprocess.run(javac_cmd, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Error running {e.cmd}: {e}")
+        print(f"Error running javac: {e}")
+        print("Javac command output:")
+        print(e.output)  # Print the output to get more information
         print("Failed at compile_apk.py. Stopping the process.")
         return
 
@@ -49,7 +51,12 @@ def compile_apk():
     ]
 
     print(f"Running d8 command: {' '.join(d8_cmd)}")
-    subprocess.run(d8_cmd, check=True)
+    try:
+        subprocess.run(d8_cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error running d8: {e}")
+        print("Failed at compile_apk.py. Stopping the process.")
+        return
 
     # Create the APK structure
     os.makedirs('build/apk', exist_ok=True)
@@ -68,7 +75,12 @@ def compile_apk():
     ]
 
     print(f"Running aapt command: {' '.join(aapt_cmd)}")
-    subprocess.run(aapt_cmd, check=True)
+    try:
+        subprocess.run(aapt_cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error running aapt: {e}")
+        print("Failed at compile_apk.py. Stopping the process.")
+        return
 
     # Add classes.dex to the APK
     with open(unsigned_apk_file, 'ab') as apk:
