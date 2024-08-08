@@ -8,55 +8,59 @@ def create_directory_structure(base_dir):
         os.path.join(base_dir, 'src', 'main', 'res', 'drawable'),
         os.path.join(base_dir, 'src', 'main', 'assets'),
         os.path.join(base_dir, 'src', 'main', 'libs'),
+        os.path.join(base_dir, 'app')
     ]
     for directory in dirs:
         os.makedirs(directory, exist_ok=True)
 
 def create_android_manifest(base_dir):
-    manifest_content = """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.app">
+    manifest_content = """<?xml version="1.0" encoding="utf-8"?>
+    <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        package="com.example.app">
 
-    <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
+        <application
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:supportsRtl="true"
+            android:theme="@style/AppTheme">
+            <activity android:name=".MainActivity">
+                <intent-filter>
+                    <action android:name="android.intent.action.MAIN" />
+                    <category android:name="android.intent.category.LAUNCHER" />
+                </intent-filter>
+            </activity>
+        </application>
 
-</manifest>"""
+    </manifest>"""
     manifest_path = os.path.join(base_dir, 'src', 'main', 'AndroidManifest.xml')
     with open(manifest_path, 'w') as manifest_file:
         manifest_file.write(manifest_content)
 
 def create_basic_resources(base_dir):
     # strings.xml
-    strings_content = """<resources>
-    <string name="app_name">MyApp</string>
-</resources>"""
+    strings_content = """<?xml version="1.0" encoding="utf-8"?>
+    <resources>
+        <string name="app_name">MyApp</string>
+    </resources>"""
     strings_path = os.path.join(base_dir, 'src', 'main', 'res', 'values', 'strings.xml')
     with open(strings_path, 'w') as strings_file:
         strings_file.write(strings_content)
 
     # activity_main.xml
-    layout_content = """<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center">
+    layout_content = """<?xml version="1.0" encoding="utf-8"?>
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello, World!" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hello, World!" />
 
-</LinearLayout>"""
+    </LinearLayout>"""
     layout_path = os.path.join(base_dir, 'src', 'main', 'res', 'layout', 'activity_main.xml')
     with open(layout_path, 'w') as layout_file:
         layout_file.write(layout_content)
@@ -103,7 +107,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.3.0'
 }"""
-    build_gradle_path = os.path.join(base_dir, 'build.gradle')
+    build_gradle_path = os.path.join(base_dir, 'app', 'build.gradle')
     with open(build_gradle_path, 'w') as build_gradle_file:
         build_gradle_file.write(build_gradle_content)
 
