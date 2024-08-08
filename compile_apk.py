@@ -1,5 +1,6 @@
 import subprocess
 import os
+import glob
 import shutil
 
 def compile_apk():
@@ -16,18 +17,29 @@ def compile_apk():
     os.makedirs(build_dir, exist_ok=True)
     os.makedirs(apk_output_dir, exist_ok=True)
 
+    # Get all Java files
+    java_files = glob.glob(os.path.join(src_dir, "*.java"))
+    
+    if not java_files:
+        print(f"No Java files found in {src_dir}. Aborting.")
+        return
+
     # Compile Java files
     javac_cmd = [
         'javac',
         '-source', '1.8',
         '-target', '1.8',
         '-d', build_dir,
-        '-cp', android_jar,
-        f'{src_dir}/*.java'
-    ]
+        '-cp', android_jar
+    ] + java_files  # add all Java files to the command
 
     print(f"Running javac command: {' '.join(javac_cmd)}")
-    subprocess.run(javac_cmd, check=True)
+    try:
+        subprocess.run(javac_cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error running {e.cmd}: {e}")
+        print("Failed at compile_apk.py. Stopping the process.")
+        return
 
     # Convert .class files to .dex format
     d8_cmd = [
@@ -62,16 +74,6 @@ def compile_apk():
     with open(unsigned_apk_file, 'ab') as apk:
         with open(dex_output_file, 'rb') as dex:
             shutil.copyfileobj(dex, apk)
-
-    # Sign the APK (this step is optional, depending on your use case)
-    # sign_cmd = [
-    #     'apksigner', 'sign',
-    #     '--ks', 'my-release-key.jks',
-    #     '--out', final_apk_file,
-    #     unsigned_apk_file
-    # ]
-    # print(f"Running apksigner command: {' '.join(sign_cmd)}")
-    # subprocess.run(sign_cmd, check=True)
 
     # For now, just copy the unsigned APK as the final APK
     shutil.copy(unsigned_apk_file, final_apk_file)
