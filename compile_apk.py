@@ -1,69 +1,85 @@
-import os
 import subprocess
+import os
+import shutil
 
 def compile_apk():
-    os.makedirs('build', exist_ok=True)
-    os.makedirs('build/intermediates/classes/debug', exist_ok=True)
-    os.makedirs('build/intermediates/res/merged/debug', exist_ok=True)
-    os.makedirs('build/outputs/apk/debug', exist_ok=True)
+    # Define paths
+    src_dir = 'output/src/com/example/myapp'
+    build_dir = 'build/intermediates/classes/debug'
+    android_jar = os.path.expandvars("$ANDROID_SDK/platforms/android-29/android.jar")
+    apk_output_dir = 'output/apk'
+    dex_output_file = 'build/classes.dex'
+    unsigned_apk_file = 'build/unsigned.apk'
+    final_apk_file = os.path.join(apk_output_dir, 'MyApp.apk')
+
+    # Create necessary directories
+    os.makedirs(build_dir, exist_ok=True)
+    os.makedirs(apk_output_dir, exist_ok=True)
 
     # Compile Java files
     javac_cmd = [
-        'javac', '-source', '1.8', '-target', '1.8',
-        '-d', 'build/intermediates/classes/debug',
-        '-cp', '$ANDROID_SDK/platforms/android-29/android.jar',
-        'src/com/example/myapp/*.java'
+        'javac',
+        '-source', '1.8',
+        '-target', '1.8',
+        '-d', build_dir,
+        '-cp', android_jar,
+        f'{src_dir}/*.java'
     ]
+
+    print(f"Running javac command: {' '.join(javac_cmd)}")
     subprocess.run(javac_cmd, check=True)
 
-    # Merge resources
-    aapt_package_cmd = [
-        'aapt', 'package', '-f', '-m', '-J', 'src',
-        '-M', 'output/AndroidManifest.xml',
-        '-S', 'output/res',
-        '-I', '$ANDROID_SDK/platforms/android-29/android.jar'
+    # Convert .class files to .dex format
+    d8_cmd = [
+        'd8',
+        '--output', 'build',
+        build_dir
     ]
-    subprocess.run(aapt_package_cmd, check=True)
 
-    # Create classes.dex
-    dx_cmd = [
-        'dx', '--dex', '--output=build/intermediates/classes/debug/classes.dex',
-        'build/intermediates/classes/debug'
-    ]
-    subprocess.run(dx_cmd, check=True)
+    print(f"Running d8 command: {' '.join(d8_cmd)}")
+    subprocess.run(d8_cmd, check=True)
 
-    # Package APK
-    aapt_package_apk_cmd = [
-        'aapt', 'package', '-f', '-m', '-F',
-        'build/outputs/apk/debug/app.unaligned.apk',
-        '-M', 'output/AndroidManifest.xml',
-        '-S', 'output/res',
-        '-I', '$ANDROID_SDK/platforms/android-29/android.jar'
-    ]
-    subprocess.run(aapt_package_apk_cmd, check=True)
+    # Create the APK structure
+    os.makedirs('build/apk', exist_ok=True)
+    shutil.copy(dex_output_file, 'build/apk/classes.dex')
 
-    # Add classes.dex to APK
-    aapt_add_cmd = [
-        'aapt', 'add', 'build/outputs/apk/debug/app.unaligned.apk',
-        'build/intermediates/classes/debug/classes.dex'
+    # Use aapt to package the APK
+    aapt_cmd = [
+        'aapt', 'package',
+        '-f',
+        '-m',
+        '-M', 'output/src/main/AndroidManifest.xml',
+        '-S', 'output/src/main/res',
+        '-I', android_jar,
+        '-F', unsigned_apk_file,
+        '-A', 'output/src/main/assets'
     ]
-    subprocess.run(aapt_add_cmd, check=True)
 
-    # Align APK
-    zipalign_cmd = [
-        'zipalign', '-v', '4',
-        'build/outputs/apk/debug/app.unaligned.apk',
-        'build/outputs/apk/debug/app.apk'
-    ]
-    subprocess.run(zipalign_cmd, check=True)
+    print(f"Running aapt command: {' '.join(aapt_cmd)}")
+    subprocess.run(aapt_cmd, check=True)
 
-    # Sign APK
-    apksigner_cmd = [
-        'apksigner', 'sign', '--ks', 'my-release-key.jks',
-        '--out', 'build/outputs/apk/debug/app-signed.apk',
-        'build/outputs/apk/debug/app.apk'
-    ]
-    subprocess.run(apksigner_cmd, check=True)
+    # Add classes.dex to the APK
+    with open(unsigned_apk_file, 'ab') as apk:
+        with open(dex_output_file, 'rb') as dex:
+            shutil.copyfileobj(dex, apk)
+
+    # Sign the APK (this step is optional, depending on your use case)
+    # sign_cmd = [
+    #     'apksigner', 'sign',
+    #     '--ks', 'my-release-key.jks',
+    #     '--out', final_apk_file,
+    #     unsigned_apk_file
+    # ]
+    # print(f"Running apksigner command: {' '.join(sign_cmd)}")
+    # subprocess.run(sign_cmd, check=True)
+
+    # For now, just copy the unsigned APK as the final APK
+    shutil.copy(unsigned_apk_file, final_apk_file)
+    print(f"APK compiled successfully at: {final_apk_file}")
 
 if __name__ == "__main__":
-    compile_apk()
+    try:
+        compile_apk()
+    except subprocess.CalledProcessError as e:
+        print(f"Error running {e.cmd}: {e}")
+        print("Failed at compile_apk.py. Stopping the process.")
