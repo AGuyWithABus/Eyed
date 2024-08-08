@@ -1,38 +1,29 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/bin/bash
 
-# Update and install necessary packages
-pkg update && pkg upgrade
-pkg install -y python wget openjdk-17
+# Update package lists and upgrade existing packages
+apt update && apt upgrade -y
 
-# Install firebase-admin using pip
-echo "Installing firebase-admin..."
+# Install necessary packages
+apt install -y python clang git zip unzip wget
+
+# Install Rust (needed for some Python packages)
+pkg install rust -y
+
+# Upgrade pip to the latest version
+pip install --upgrade pip
+
+# Install Python dependencies
 pip install firebase-admin
 
-# Install apktool
-echo "Installing apktool..."
+# APKTool installation instructions (requires manual setup)
+echo "Installing APKTool..."
 
-# Define versions
-APKTOOL_VERSION="2.8.0"
-APKTOOL_JAR="apktool_${APKTOOL_VERSION}.jar"
-APKTOOL_URL="https://github.com/iBotPeaches/Apktool/releases/download/${APKTOOL_VERSION}/apktool_${APKTOOL_VERSION}.jar"
-APKTOOL_BIN="apktool"
+# Fetching the APKTool jar and wrapper script
+wget https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool -O /usr/local/bin/apktool
+wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.8.1.jar -O /usr/local/bin/apktool.jar
 
-# Download apktool jar
-wget "$APKTOOL_URL" -O "$APKTOOL_JAR"
+# Make the APKTool script executable
+chmod +x /usr/local/bin/apktool
 
-# Create apktool script
-echo '#!/data/data/com.termux/files/usr/bin/bash' > "$APKTOOL_BIN"
-echo "java -jar $(pwd)/$APKTOOL_JAR \"\$@\"" >> "$APKTOOL_BIN"
-
-# Make the script executable
-chmod +x "$APKTOOL_BIN"
-
-# Move script to /data/data/com.termux/files/usr/bin/ for easy access
-mv "$APKTOOL_BIN" /data/data/com.termux/files/usr/bin/
-
-# Verify installations
-echo "Verifying installations..."
-echo "Firebase-admin version:"
-pip show firebase-admin
-echo "Apktool version:"
+# Check APKTool version
 apktool --version
